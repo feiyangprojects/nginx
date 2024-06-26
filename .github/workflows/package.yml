@@ -1,0 +1,46 @@
+name: Package CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    container: alpine:latest
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        run: ./prepare.sh
+      - name: Fetch source code
+        id: code
+        run: ./fetch.sh
+      - name: Build source code
+        run: ./build.sh
+      - name: Package binaries
+        run: ./package.sh
+      - name: Publish packages
+        uses: softprops/action-gh-release@v2
+        with:
+          body: |
+            NGINX ${{ steps.code.outputs.NGINX_VERSION }}
+
+            Built with:
+            LibreSSL ${{ steps.code.outputs.LIBRESSL_VERSION }}
+            PCRE2 ${{ steps.code.outputs.PCRE2_VERSION }}
+            libxml2 ${{ steps.code.outputs.LIBXML2_VERSION }}
+            libxslt ${{ steps.code.outputs.LIBXSLT_VERSION }}
+            zlib ${{ steps.code.outputs.ZLIB_VERSION }}
+
+            Added modules:
+            headers-more-nginx-module HEAD
+            nginx-dav-ext-module HEAD
+            ngx_brotli HEAD
+            ngx-fancyindex HEAD
+            njs ${{ steps.code.outputs.NJS_VERSION }}
+          tag_name: ${{ steps.code.outputs.NGINX_VERSION }}
+          files: |
+            **/*.deb
+            **/*.rpm
