@@ -1,6 +1,6 @@
 #!/bin/sh -e
 cd workdir
-NGINX_VERSION="$(curl "https://release-monitoring.org/api/v2/versions/?project_id=5413" | jq -r '.latest_version')"
+NGINX_VERSION="$(cat ver/NGINX)"
 cd deb
 sed -i "s/__NGINX_VERSION__/$NGINX_VERSION/" DEBIAN/control
 mkdir -p etc/nginx lib/systemd/system usr/sbin var/lib/nginx var/log/nginx
