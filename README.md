@@ -12,7 +12,6 @@
 - --with-http_realip_module
 - --with-http_addition_module
 - --with-http_xslt_module
-- --with-mail_ssl_module
 - --with-http_sub_module
 - --with-http_dav_module
 - --with-http_flv_module
