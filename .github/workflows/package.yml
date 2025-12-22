@@ -20,6 +20,10 @@ jobs:
       - name: Build source code
         run: ./build.sh
       - name: Package binaries
+        env:
+          CLOUDSMITH_USERNAME: ${{ secrets.CLOUDSMITH_USERNAME }}
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          CLOUDSMITH_REPOSITORY: ${{ secrets.CLOUDSMITH_REPOSITORY }}
         run: ./package.sh
       - name: Publish packages
         uses: softprops/action-gh-release@v2
@@ -44,7 +48,3 @@ jobs:
           files: |
             **/*.deb
             **/*.rpm
-      - name: Push packages
-        run: |
-          set -e
-          find \( -name '*.deb' -or -name '*.rpm' \) -exec curl -F 'package=@{}' 'https://${{ secrets.FURY_TOKEN }}@push.fury.io/${{ secrets.FURY_USERNAME }}/' \;
