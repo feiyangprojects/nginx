@@ -1,60 +1,47 @@
 #!/bin/sh -e
-cd workdir
-cd lib
-cd libxml2
-mkdir -p build
-cd build
-cmake \
+
+function cmake_build_and_install() {
+    if [ -z "$CMAKE_WORKDIR" ]; then
+        CMAKE_WORKDIR='build'
+    fi
+    mkdir -p "$CMAKE_WORKDIR"
+    cd "$CMAKE_WORKDIR"
+    cmake \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
     -DCMAKE_CXX_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
+    $@ ..
+    cmake \
+    --build . \
+    --config Release
+    cmake --install . || true
+    cd ..
+}
+
+cd workdir
+
+cd lib
+cd libxml2
+cmake_build_and_install \
     -DBUILD_SHARED_LIBS=OFF \
     -DLIBXML2_WITH_PROGRAMS=OFF \
     -DLIBXML2_WITH_TESTS=OFF \
-    -DLIBXML2_WITH_PYTHON=OFF \
-    ..
-cmake \
-    --build . \
-    --config Release
-cmake --install .
+    -DLIBXML2_WITH_PYTHON=OFF
 cd ..
-cd ..
-
 cd libxslt
-mkdir -p build
-cd build
-cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_C_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
-    -DCMAKE_CXX_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
+cmake_build_and_install \
     -DBUILD_SHARED_LIBS=OFF \
     -DLIBXSLT_WITH_TESTS=OFF \
-    -DLIBXSLT_WITH_PYTHON=OFF \
-   ..
-cmake \
-    --build . \
-    --config Release
-cmake --install .
-cd ..
+    -DLIBXSLT_WITH_PYTHON=OFF
 cd ..
 cd ..
 
 cd mod
 cd ngx_brotli/deps/brotli
-mkdir -p out
-cd out
-cmake \
-    -DCMAKE_BUILD_TYPE=Release \
+CMAKE_WORKDIR=out cmake_build_and_install \
     -DBUILD_SHARED_LIBS=OFF \
-    -DCMAKE_C_FLAGS="-Ofast -m64 -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-    -DCMAKE_CXX_FLAGS="-Ofast -m64 -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections" \
-    -DCMAKE_INSTALL_PREFIX=./installed \
-    ..
-cmake \
-    --build . \
-    --config Release \
-    --target brotlienc
-cd ../../../..
+    -DBROTLI_BUILD_TOOLS=OFF
+cd ../../..
 cd ..
 
 cd core
@@ -105,4 +92,5 @@ cd core
     --with-ld-opt="-Wl,-z,relro,-z,now -pie -s -static"
 make
 cd ..
+
 cd ..

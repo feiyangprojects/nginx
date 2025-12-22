@@ -1,47 +1,45 @@
 #!/bin/sh -e
-ANITYA_API_VERSIONS="https://release-monitoring.org/api/v2/versions/"
+
+# Use it with `anitya_fetch PROJECTID PROJECTNAME https://scm.example.org/user/project/refs/tags/vPROJECTNAME_VERSION TAR_TRANSFORM`
+function anitya_fetch() {
+    case "$3" in
+        *.bz2) FORMAT='j' ;;
+        *.gz) FORMAT='z' ;;
+        *.xz) FORMAT='J' ;;
+        *) echo -e 'Unrecognized compressed archive format.' && exit 1 ;;
+    esac
+
+    PROJECT_NAME="$(echo "$2" | tr '[:lower:]' '[:upper:]')"
+    export "${PROJECT_NAME}_VERSION=$(curl "https://release-monitoring.org/api/v2/versions/?project_id=$1" | jq -r '.latest_version')"
+    curl -L "$(echo "$3" | envsubst)" | tar -x$FORMAT --transform "$4"
+}
 
 mkdir -p workdir
 cd workdir
-mkdir -p ver
+
 mkdir -p lib
 cd lib
-export LIBXML2_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=1783" | jq -r '.latest_version')"
-curl "https://gitlab.gnome.org/GNOME/libxml2/-/archive/v$LIBXML2_VERSION/libxml2-v$LIBXML2_VERSION.tar.gz" | tar xz --one-top-level=libxml2 --strip-components=1
-echo "$LIBXML2_VERSION" > ../ver/LIBXML2
-export LIBXSLT_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=13301" | jq -r '.latest_version')"
-curl "https://gitlab.gnome.org/GNOME/libxslt/-/archive/v$LIBXSLT_VERSION/libxslt-v$LIBXSLT_VERSION.tar.gz" | tar xz --transform 's#^libxslt-[^/]*#libxslt#'
-echo "$LIBXSLT_VERSION" > ../ver/LIBXSLT
-
-export LIBRESSL_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=12102" | jq -r '.latest_version')"
-curl "https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz" | tar xz --one-top-level=libressl --strip-components=1
-echo "$LIBRESSL_VERSION" > ../ver/LIBRESSL
-export PCRE2_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=5832" | jq -r '.latest_version')"
-curl --location "https://github.com/PCRE2Project/pcre2/releases/latest/download/pcre2-$PCRE2_VERSION.tar.gz" | tar xz --one-top-level=pcre2 --strip-components=1
-echo "$PCRE2_VERSION" > ../ver/PCRE2
-export ZLIB_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=5303" | jq -r '.latest_version')"
-curl "https://zlib.net/zlib-$(curl "$ANITYA_API_VERSIONS?project_id=5303" | jq -r '.latest_version').tar.gz" | tar xz --one-top-level=zlib --strip-components=1
-echo "$ZLIB_VERSION" > ../ver/ZLIB
+anitya_fetch 1783 libxml2 'https://gitlab.gnome.org/GNOME/libxml2/-/archive/v$LIBXML2_VERSION/libxml2-v$LIBXML2_VERSION.tar.gz' 's#^libxml2-[^/]*#libxml2#'
+anitya_fetch 12102 libressl 'https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl-$LIBRESSL_VERSION.tar.gz' 's#^libressl-[^/]*#libressl#'
+anitya_fetch 13301 libxslt 'https://gitlab.gnome.org/GNOME/libxslt/-/archive/v$LIBXSLT_VERSION/libxslt-v$LIBXSLT_VERSION.tar.gz' 's#^libxslt-[^/]*#libxslt#'
+anitya_fetch 5832 pcre2 'https://github.com/PCRE2Project/pcre2/releases/download/pcre2-$PCRE2_VERSION/pcre2-$PCRE2_VERSION.tar.gz' 's#^pcre2-[^/]*#pcre2#'
+anitya_fetch 5303 zlib 'https://github.com/madler/zlib/archive/refs/tags/v$ZLIB_VERSION.tar.gz' 's#^zlib-[^/]*#zlib#'
 cd ..
 
 mkdir -p mod
 cd mod
 # Use git HEAD for headers-more-nginx-module, nginx-dav-ext-module and ngx_brotli due to no recent release
-git clone --depth=1 https://github.com/openresty/headers-more-nginx-module.git
-git clone --depth=1 https://github.com/arut/nginx-dav-ext-module.git
+git clone --depth=1 --recurse-submodules https://github.com/openresty/headers-more-nginx-module.git
+git clone --depth=1 --recurse-submodules https://github.com/arut/nginx-dav-ext-module.git
 git clone --depth=1 --recurse-submodules https://github.com/google/ngx_brotli.git
-git clone --depth=1 https://github.com/aperezdc/ngx-fancyindex.git
-export NJS_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=212650" | jq -r '.latest_version')"
-curl --location "https://github.com/nginx/njs/archive/refs/tags/$(curl "$ANITYA_API_VERSIONS?project_id=212650" | jq -r '.latest_version').tar.gz" | tar xz --one-top-level=njs --strip-components=1
-echo "$NJS_VERSION" > ../ver/NJS
+git clone --depth=1 --recurse-submodules https://github.com/aperezdc/ngx-fancyindex.git
+anitya_fetch 212650 njs 'https://github.com/nginx/njs/archive/refs/tags/$NJS_VERSION.tar.gz' 's#^njs-[^/]*#njs#'
 cd ..
 
-export NGINX_VERSION="$(curl "$ANITYA_API_VERSIONS?project_id=5413" | jq -r '.latest_version')"
-curl "https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz" | tar xz --one-top-level=core --strip-components=1
-echo "$NGINX_VERSION" > ver/NGINX
+anitya_fetch 5413 nginx 'https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz' 's#^nginx-[^/]*#core#'
 
+printenv | grep -E '_VERSION=' > ver
 if [ -n "$GITHUB_OUTPUT" ]; then
-    printenv | grep 'VERSION' > "$GITHUB_OUTPUT"
+    printenv | grep -E '_VERSION=' > "$GITHUB_OUTPUT"
 fi
 cd ..
-

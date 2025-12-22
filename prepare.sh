@@ -1,5 +1,5 @@
 #!/bin/sh -e
 apk add --no-cache \
-    curl git gzip jq tar xz \
+    curl gettext git gzip jq tar xz \
     autoconf automake build-base cmake libtool \
     dpkg rpm
