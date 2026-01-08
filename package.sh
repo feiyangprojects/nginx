@@ -34,26 +34,18 @@ cd ..
 if [ -n "$CLOUDSMITH_API_KEY" ]; then
     cd dist
 
-    DEB="$(find -name '*.deb' -exec basename {} \;)"
-    DEB_IDENTIFIER="$(curl \
-        --header "Content-Sha256: $(sha256sum "$DEB" | cut -d ' ' -f 1)" \
-        --upload-file "$DEB" \
-        "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@upload.cloudsmith.io/$CLOUDSMITH_REPOSITORY/$DEB" | jq -r '.identifier')"
-    curl \
-        --request POST \
-        --header "Content-Type: application/json"  \
-        --data "{\"distribution\":\"otherdeb/any-version\",\"package_file\":\"$DEB_IDENTIFIER\"}" \
-        "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@api.cloudsmith.io/v1/packages/$CLOUDSMITH_REPOSITORY/upload/deb/"
-    RPM="$(find -name '*.rpm' -exec basename {} \;)"
-    RPM_IDENTIFIER="$(curl \
-        --header "Content-Sha256: $(sha256sum "$RPM" | cut -d ' ' -f 1)" \
-        --upload-file "$RPM" \
-        "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@upload.cloudsmith.io/$CLOUDSMITH_REPOSITORY/$RPM" | jq -r '.identifier')"
-    curl \
-        --request POST \
-        --header "Content-Type: application/json"  \
-        --data "{\"distribution\":\"otherrpm/any-version\",\"package_file\":\"$RPM_IDENTIFIER\"}" \
-        "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@api.cloudsmith.io/v1/packages/$CLOUDSMITH_REPOSITORY/upload/rpm/"
+    for type in deb rpm; do
+        PACKAGE="$(find -name "*.$type" -exec basename {} \;)"
+        PACKAGE_IDENTIFIER="$(curl \
+            --header "Content-Sha256: $(sha256sum "$PACKAGE" | cut -d ' ' -f 1)" \
+            --upload-file "$PACKAGE" \
+            "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@upload.cloudsmith.io/$CLOUDSMITH_REPOSITORY/$PACKAGE" | jq -r '.identifier')"
+        curl \
+            --request POST \
+            --header "Content-Type: application/json"  \
+            --data "{\"distribution\":\"other$type/any-version\",\"package_file\":\"$PACKAGE_IDENTIFIER\"}" \
+            "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@api.cloudsmith.io/v1/packages/$CLOUDSMITH_REPOSITORY/upload/$type/"
+    done
 
     cd ..
 fi
