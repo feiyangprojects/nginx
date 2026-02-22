@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+# export DH_VERBOSE=1
+
+DESTDIR=$(CURDIR)/debian/nginx
+
+clean:
+	rm -fr ./debian/nginx
+
+install:
+	install -Dm644 ../../conf/nginx.service $(DESTDIR)/usr/lib/systemd/system/nginx.service
+	$(MAKE) -C ../core --trace install DESTDIR=$(DESTDIR)
+	rm -f $(DESTDIR)/usr/sbin/nginx.old
+
+binary: install
+	dh binary
+
+.PHONY: clean install binary

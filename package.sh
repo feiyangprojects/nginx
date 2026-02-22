@@ -1,31 +1,23 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
+set -e
+
 cd workdir
 . ver
 
 cd deb
-sed -i "s/__NGINX_VERSION__/$NGINX_VERSION/" DEBIAN/control
-mkdir -p etc/nginx lib/systemd/system usr/sbin var/lib/nginx var/log/nginx
-cp ../../conf/nginx.service lib/systemd/system
-cp ../core/conf/* etc/nginx
-cp ../core/objs/nginx usr/sbin
-find -maxdepth 1 ! -name '.' ! -name 'DEBIAN' -exec chown -R root:root {} \;
-find -type d ! -name 'DEBIAN' -exec chmod 755 {} \;
-chmod 750 var/lib/nginx var/log/nginx
-chmod 755 usr/sbin/nginx
-dpkg-deb --build . "../../dist/nginx-$NGINX_VERSION.deb"
+sed -Ei "s/(nginx \()[0-9\.]+/\1$NGINX_VERSION/" debian/changelog
+dpkg-buildpackage -b
 cd ..
+mv *.deb ../dist
 cd rpm
-sed -i "s/__NGINX_VERSION__/$NGINX_VERSION/" package.spec
+sed -Ei "s/(Version:        )[0-9\.]+/\1$NGINX_VERSION/" package.spec
 cp ../../conf/* .
-cp ../core/conf/* .
-cp ../core/objs/nginx .
 rpmbuild \
     -bb \
+    --define "_builddir $PWD/../core" \
     --define "_sourcedir $PWD" \
     --define "_rpmdir $PWD/../../dist" \
     --define '_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm' \
-    --define '__brp_strip_static_archive /bin/true' \
-    --define '__brp_remove_la_files /bin/true' \
     package.spec
 cd ..
 

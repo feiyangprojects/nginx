@@ -5,15 +5,15 @@ on:
 
 jobs:
   build:
-    container: alpine:latest
-    runs-on: ubuntu-24.04
+    container: debian:testing
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-      - name: Prepare environment
-        run: ./prepare.sh
+      - name: Install packages
+        run: ./install.sh
       - name: Fetch source code
         id: code
         run: ./fetch.sh

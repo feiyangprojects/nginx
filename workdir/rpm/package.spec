@@ -13,39 +13,29 @@
 # published by the Open Source Initiative.
 
 Name:           nginx
-Version:        __NGINX_VERSION__
+Version:        1.0.0
 Release:        0
 Summary:        A HTTP server and IMAP/POP3 proxy server
 License:        BSD-2-Clause
 Group:          Productivity/Networking/Web/Proxy
 URL:            https://nginx.org
-Source0:        nginx
-Source1:        nginx.service
-Source2:        nginx.sysusers
-Source3:        fastcgi.conf
-Source4:        fastcgi_params
-Source5:        koi-utf
-Source6:        koi-win
-Source7:        mime.types
-Source8:        nginx.conf
-Source9:        scgi_params
-Source10:       uwsgi_params
-Source11:       win-utf
-Requires:       systemd >= 215
-Provides:       http_daemon
+Source0:        nginx.service
+Source1:        nginx.sysusers
 Provides:       httpd
 
 %description
 nginx [engine x] is a HTTP server and IMAP/POP3 proxy server written by Igor Sysoev.
 It has been running on many heavily loaded Russian sites for more than two years.
 
-%install
-echo "/usr/bin/printf '$(sed ':a;N;$!ba;s/\n/\\n/g' '%{SOURCE2}')' | /usr/bin/systemd-sysusers --replace=%{_prefix}/lib/sysusers.d/%{name}.conf -" > %{name}.pre
+%setup
 
-install -Dm755 %{SOURCE0} %{buildroot}%{_sbindir}/%{name}
-install -Dm644 %{SOURCE1} %{buildroot}%{_prefix}/lib/systemd/system/%{name}.service
-install -Dm644 %{SOURCE2} %{buildroot}%{_prefix}/lib/sysusers.d/%{name}.conf
-install -Dm644 -t%{buildroot}%{_sysconfdir}/%{name} %{SOURCE3} %{SOURCE4} %{SOURCE5} %{SOURCE6} %{SOURCE7} %{SOURCE8} %{SOURCE9} %{SOURCE10} %{SOURCE11}
+%install
+echo "/usr/bin/printf '$(sed ':a;N;$!ba;s/\n/\\n/g' '%{SOURCE1}')' | /usr/bin/systemd-sysusers --replace=%{_prefix}/lib/sysusers.d/%{name}.conf -" > %{name}.pre
+\
+install -Dm644 %{SOURCE0} %{buildroot}%{_prefix}/lib/systemd/system/%{name}.service
+install -Dm644 %{SOURCE1} %{buildroot}%{_prefix}/lib/sysusers.d/%{name}.conf
+%make_install -C ..
+rm -fr %{buildroot}%{_prefix}/html
 install -dm750 %{buildroot}%{_localstatedir}/lib/%{name}
 install -dm750 %{buildroot}%{_localstatedir}/log/%{name}
 
@@ -56,6 +46,12 @@ install -dm750 %{buildroot}%{_localstatedir}/log/%{name}
 %{_prefix}/lib/systemd/system/%{name}.service
 %{_prefix}/lib/sysusers.d/%{name}.conf
 %dir %{_sysconfdir}/%{name}
+%{_sysconfdir}/%{name}/fastcgi.conf.default
+%{_sysconfdir}/%{name}/fastcgi_params.default
+%{_sysconfdir}/%{name}/mime.types.default
+%{_sysconfdir}/%{name}/nginx.conf.default
+%{_sysconfdir}/%{name}/scgi_params.default
+%{_sysconfdir}/%{name}/uwsgi_params.default
 %config(noreplace) %{_sysconfdir}/%{name}/fastcgi.conf
 %config(noreplace) %{_sysconfdir}/%{name}/fastcgi_params
 %config(noreplace) %{_sysconfdir}/%{name}/koi-utf

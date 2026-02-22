@@ -1,4 +1,5 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
+set -e
 
 # Use it with `anitya_fetch PROJECTID PROJECTNAME https://scm.example.org/user/project/refs/tags/vPROJECTNAME_VERSION TAR_TRANSFORM`
 function anitya_fetch() {
@@ -9,9 +10,9 @@ function anitya_fetch() {
         *) echo -e 'Unrecognized compressed archive format.' && exit 1 ;;
     esac
 
-    PROJECT_NAME="$(echo "$2" | tr '[:lower:]' '[:upper:]')"
+    PROJECT_NAME="$(tr '[:lower:]' '[:upper:]' <<< "$2")"
     export "${PROJECT_NAME}_VERSION=$(curl "https://release-monitoring.org/api/v2/versions/?project_id=$1" | jq -r '.latest_version')"
-    curl -L "$(echo "$3" | envsubst)" | tar -x$FORMAT --transform "$4"
+    curl -L "$(envsubst <<< "$3")" | tar -x$FORMAT --transform "$4"
 }
 
 mkdir -p workdir
@@ -40,6 +41,6 @@ anitya_fetch 5413 nginx 'https://nginx.org/download/nginx-$NGINX_VERSION.tar.gz'
 
 printenv | grep -E '_VERSION=' > ver
 if [ -n "$GITHUB_OUTPUT" ]; then
-    printenv | grep -E '_VERSION=' > "$GITHUB_OUTPUT"
+    cat ver > "$GITHUB_OUTPUT"
 fi
 cd ..

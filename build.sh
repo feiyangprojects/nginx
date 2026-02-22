@@ -1,4 +1,7 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
+set -e
+
+export CC='musl-gcc'
 
 function cmake_build_and_install() {
     if [ -z "$CMAKE_WORKDIR" ]; then
@@ -11,8 +14,13 @@ function cmake_build_and_install() {
     -DCMAKE_C_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
     -DCMAKE_CXX_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
     $@ ..
+    CMAKE_BUILD_ARGS=()
+    if [ -n "$CMAKE_BUILD_TARGET" ]; then
+        CMAKE_BUILD_ARGS+=('--target' "$CMAKE_BUILD_TARGET")
+    fi
     cmake \
     --build . \
+    ${CMAKE_BUILD_ARGS[@]} \
     --config Release
     cmake --install . || true
     cd ..
@@ -38,7 +46,7 @@ cd ..
 
 cd mod
 cd ngx_brotli/deps/brotli
-CMAKE_WORKDIR=out cmake_build_and_install \
+CMAKE_WORKDIR=out CMAKE_BUILD_TARGET=brotlienc cmake_build_and_install \
     -DBUILD_SHARED_LIBS=OFF \
     -DBROTLI_BUILD_TOOLS=OFF
 cd ../../..
