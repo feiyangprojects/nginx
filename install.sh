@@ -5,4 +5,4 @@ apt update
 apt install --yes \
     curl gettext git gzip jq tar xz-utils \
     autoconf automake cmake libtool musl-tools \
-    dpkg dpkg-dev rpm
+    debhelper dpkg dpkg-dev rpm
