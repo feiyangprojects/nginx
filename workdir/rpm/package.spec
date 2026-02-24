@@ -19,8 +19,6 @@ Summary:        A HTTP server and IMAP/POP3 proxy server
 License:        BSD-2-Clause
 Group:          Productivity/Networking/Web/Proxy
 URL:            https://nginx.org
-Source0:        nginx.service
-Source1:        nginx.sysusers
 Provides:       httpd
 
 %description
@@ -30,12 +28,11 @@ It has been running on many heavily loaded Russian sites for more than two years
 %setup
 
 %install
-echo "/usr/bin/printf '$(sed ':a;N;$!ba;s/\n/\\n/g' '%{SOURCE1}')' | /usr/bin/systemd-sysusers --replace=%{_prefix}/lib/sysusers.d/%{name}.conf -" > %{name}.pre
-\
-install -Dm644 %{SOURCE0} %{buildroot}%{_prefix}/lib/systemd/system/%{name}.service
-install -Dm644 %{SOURCE1} %{buildroot}%{_prefix}/lib/sysusers.d/%{name}.conf
+echo "/usr/bin/printf '$(sed ':a;N;$!ba;s/\n/\\n/g' ../../../conf/%{name}.sysusers)' | /usr/bin/systemd-sysusers --replace=%{_prefix}/lib/sysusers.d/%{name}.conf -" > %{name}.pre
+
+install -Dm644 ../../../conf/%{name}.service %{buildroot}%{_prefix}/lib/systemd/system/%{name}.service
+install -Dm644 ../../../conf/%{name}.sysusers %{buildroot}%{_prefix}/lib/sysusers.d/%{name}.conf
 %make_install -C ..
-rm -fr %{buildroot}%{_prefix}/html
 install -dm750 %{buildroot}%{_localstatedir}/lib/%{name}
 install -dm750 %{buildroot}%{_localstatedir}/log/%{name}
 
@@ -45,13 +42,16 @@ install -dm750 %{buildroot}%{_localstatedir}/log/%{name}
 %{_sbindir}/%{name}
 %{_prefix}/lib/systemd/system/%{name}.service
 %{_prefix}/lib/sysusers.d/%{name}.conf
+%dir %{_prefix}/html
+%{_prefix}/html/50x.html
+%{_prefix}/html/index.html
 %dir %{_sysconfdir}/%{name}
-%{_sysconfdir}/%{name}/fastcgi.conf.default
-%{_sysconfdir}/%{name}/fastcgi_params.default
-%{_sysconfdir}/%{name}/mime.types.default
-%{_sysconfdir}/%{name}/nginx.conf.default
-%{_sysconfdir}/%{name}/scgi_params.default
-%{_sysconfdir}/%{name}/uwsgi_params.default
+%config %{_sysconfdir}/%{name}/fastcgi.conf.default
+%config %{_sysconfdir}/%{name}/fastcgi_params.default
+%config %{_sysconfdir}/%{name}/mime.types.default
+%config %{_sysconfdir}/%{name}/nginx.conf.default
+%config %{_sysconfdir}/%{name}/scgi_params.default
+%config %{_sysconfdir}/%{name}/uwsgi_params.default
 %config(noreplace) %{_sysconfdir}/%{name}/fastcgi.conf
 %config(noreplace) %{_sysconfdir}/%{name}/fastcgi_params
 %config(noreplace) %{_sysconfdir}/%{name}/koi-utf

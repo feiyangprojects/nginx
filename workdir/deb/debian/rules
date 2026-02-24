@@ -9,11 +9,11 @@ clean:
 	rm -fr ./debian/nginx
 
 install:
+	rm -fr ./debian/nginx/usr/sbin/nginx
 	install -Dm644 ../../conf/nginx.service $(DESTDIR)/usr/lib/systemd/system/nginx.service
 	$(MAKE) -C ../core --trace install DESTDIR=$(DESTDIR)
-	rm -f $(DESTDIR)/usr/sbin/nginx.old
 
-binary: install
+binary: clean install
 	dh binary
 
-.PHONY: clean install binary
+.PHONY:

@@ -11,7 +11,6 @@ cd ..
 mv *.deb ../dist
 cd rpm
 sed -Ei "s/(Version:        )[0-9\.]+/\1$NGINX_VERSION/" package.spec
-cp ../../conf/* .
 rpmbuild \
     -bb \
     --define "_builddir $PWD/../core" \
