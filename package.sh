@@ -30,13 +30,15 @@ if [ -n "$CLOUDSMITH_API_KEY" ]; then
         PACKAGE="$(find -name "*.$type" -exec basename {} \;)"
         PACKAGE_IDENTIFIER="$(curl \
             --header "Content-Sha256: $(sha256sum "$PACKAGE" | cut -d ' ' -f 1)" \
+            --user "$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY" \
             --upload-file "$PACKAGE" \
-            "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@upload.cloudsmith.io/$CLOUDSMITH_REPOSITORY/$PACKAGE" | jq -r '.identifier')"
+            "https://upload.cloudsmith.io/$CLOUDSMITH_NAMESPACE/$CLOUDSMITH_REPOSITORY/$PACKAGE" | jq -r '.identifier')"
         curl \
             --request POST \
+            --user "$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY" \
             --header "Content-Type: application/json"  \
             --data "{\"distribution\":\"other$type/any-version\",\"package_file\":\"$PACKAGE_IDENTIFIER\"}" \
-            "https://$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY@api.cloudsmith.io/v1/packages/$CLOUDSMITH_REPOSITORY/upload/$type/"
+            "https://api.cloudsmith.io/v1/packages/$CLOUDSMITH_NAMESPACE/$CLOUDSMITH_REPOSITORY/upload/$type/"
     done
 
     cd ..
