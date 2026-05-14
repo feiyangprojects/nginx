@@ -11,7 +11,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Start foreign builder
         env:
           FOREIGN_BUILDER_WEBHOOK_METHOD: ${{ secrets.FOREIGN_BUILDER_WEBHOOK_METHOD }}
