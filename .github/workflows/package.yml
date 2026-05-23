@@ -12,13 +12,13 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v5
+      - name: Install packages
+        run: ./install.sh
       - name: Start foreign builder
         env:
           FOREIGN_BUILDER_WEBHOOK_METHOD: ${{ secrets.FOREIGN_BUILDER_WEBHOOK_METHOD }}
           FOREIGN_BUILDER_WEBHOOK_URL: ${{ secrets.FOREIGN_BUILDER_WEBHOOK_URL }}
         run: curl -f -X "$FOREIGN_BUILDER_WEBHOOK_METHOD" "$FOREIGN_BUILDER_WEBHOOK_URL"
-      - name: Install packages
-        run: ./install.sh
       - name: Fetch source code
         id: code
         run: ./fetch.sh
