@@ -5,10 +5,14 @@ on:
 
 jobs:
   build:
+    name: build-${{ matrix.os }}
     container: debian:testing
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
+    strategy:
+      matrix:
+        os: [ubuntu-26.04, ubuntu-26.04-arm]
     steps:
       - name: Checkout source code
         uses: actions/checkout@v5
