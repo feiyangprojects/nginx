@@ -23,25 +23,29 @@ for package in packages:
         + "/"
         + package["identifiers"]["architecture"]
     )
-    package_version = Version(package["version"])
 
-    if (
-        package_identifier in checked_packages
-        and checked_packages[package_identifier] > package_version
-    ):
-        session.delete(
-            "https://api.cloudsmith.io/v1/packages/"
-            + os.environ["CLOUDSMITH_NAMESPACE"]
-            + "/"
-            + os.environ["CLOUDSMITH_REPOSITORY"]
-            + "/"
-            + package["slug_perm"]
-        )
-        print(
-            "Deleted old version "
-            + package["version"]
-            + "of package "
-            + package_identifier
-        )
-    else:
-        checked_packages[package_identifier] = package_version
+    try:
+        package_version = Version(package["version"])
+
+        if (
+            package_identifier in checked_packages
+            and checked_packages[package_identifier] > package_version
+        ):
+            session.delete(
+                "https://api.cloudsmith.io/v1/packages/"
+                + os.environ["CLOUDSMITH_NAMESPACE"]
+                + "/"
+                + os.environ["CLOUDSMITH_REPOSITORY"]
+                + "/"
+                + package["slug_perm"]
+            )
+            print(
+                "Deleted old version "
+                + package["version"]
+                + "of package "
+                + package_identifier
+            )
+        else:
+            checked_packages[package_identifier] = package_version
+    except:
+        pass
