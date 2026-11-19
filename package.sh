@@ -26,7 +26,7 @@ if [ -n "$CLOUDSMITH_API_KEY" ]; then
     cd dist
 
     for type in deb rpm; do
-        PACKAGE="$(find -name "*.$type" -exec basename {} \;)"
+        PACKAGE="$(find -name "*.$type" -type 'f' -exec basename {} \;)"
         PACKAGE_IDENTIFIER="$(curl \
             --header "Content-Sha256: $(sha256sum "$PACKAGE" | cut -d ' ' -f 1)" \
             --user "$CLOUDSMITH_USERNAME:$CLOUDSMITH_API_KEY" \

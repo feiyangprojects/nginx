@@ -13,14 +13,14 @@ function cmake_build_and_install() {
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_C_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
     -DCMAKE_CXX_FLAGS="-O2 -Wall -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -Werror=return-type -flto=auto -g -fPIC -D_GNU_SOURCE" \
-    $@ ..
+    "$@" ..
     CMAKE_BUILD_ARGS=()
     if [ -n "$CMAKE_BUILD_TARGET" ]; then
         CMAKE_BUILD_ARGS+=('--target' "$CMAKE_BUILD_TARGET")
     fi
     cmake \
     --build . \
-    ${CMAKE_BUILD_ARGS[@]} \
+    "${CMAKE_BUILD_ARGS[@]}" \
     --config Release
     cmake --install . || true
     cd ..
@@ -84,6 +84,7 @@ cd core
     --with-http_degradation_module \
     --with-http_slice_module \
     --with-http_stub_status_module \
+	--with-mail \
     --with-mail_ssl_module \
     --with-stream \
     --with-stream_ssl_module \
